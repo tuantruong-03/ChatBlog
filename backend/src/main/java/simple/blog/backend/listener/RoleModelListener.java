@@ -1,22 +1,18 @@
 package simple.blog.backend.listener;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.mapping.event.AbstractMongoEventListener;
 import org.springframework.data.mongodb.core.mapping.event.BeforeConvertEvent;
 import org.springframework.stereotype.Component;
 
+import lombok.RequiredArgsConstructor;
 import simple.blog.backend.model.Role;
-import simple.blog.backend.model.User;
 import simple.blog.backend.service.SequenceGeneratorService;
 
 @Component
+@RequiredArgsConstructor
 public class RoleModelListener extends AbstractMongoEventListener<Role> {
 
     private final SequenceGeneratorService sequenceGeneratorService;
-
-    public RoleModelListener(SequenceGeneratorService sequenceGeneratorService) {
-        this.sequenceGeneratorService = sequenceGeneratorService;
-    }
 
     @Override
     public void onBeforeConvert(BeforeConvertEvent<Role> event) {

@@ -10,18 +10,16 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Service;
 
+import lombok.RequiredArgsConstructor;
 import simple.blog.backend.model.DatabaseSequence;
 import simple.blog.backend.service.SequenceGeneratorService;
 
 // auto-generate id, just copy and paste
 @Service
+@RequiredArgsConstructor
 public class SequenceGeneratorServiceImpl implements SequenceGeneratorService {
-    private MongoOperations mongoOperations;
+    private final MongoOperations mongoOperations;
 
-    @Autowired
-    public SequenceGeneratorServiceImpl(MongoOperations mongoOperations) {
-        this.mongoOperations = mongoOperations;
-    }
     @Override
     public long generateSequence(String seqName) {
         DatabaseSequence counter = mongoOperations.findAndModify(

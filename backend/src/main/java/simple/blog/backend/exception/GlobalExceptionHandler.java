@@ -3,28 +3,60 @@ package simple.blog.backend.exception;
 import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import jakarta.validation.ConstraintViolationException;
 import simple.blog.backend.dto.response.ResponseDTO;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ResponseDTO> handleUnwantedException(Exception e) {
+		ResponseDTO resp = ResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.message(e.getMessage())
+				.statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
+				.build();
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ResponseDTO> handleUnwantedException(Exception e) {
-        ResponseDTO responseDTO = new ResponseDTO(null, e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR.value(), LocalDateTime.now());
-        return new ResponseEntity<>(responseDTO, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+		return new ResponseEntity<>(resp, HttpStatus.INTERNAL_SERVER_ERROR);
+	}
 
-    @ExceptionHandler(AppException.class)
-    public ResponseEntity<ResponseDTO> handleAppException(AppException e) {
-        String message = e.getMessage();
-        HttpStatus httpStatus = e.getHttpStatus();
-        ResponseDTO responseDTO = new ResponseDTO(null, message, httpStatus.value() , message);
-        return new ResponseEntity<>(responseDTO, httpStatus);
-    }
+	@ExceptionHandler(AppException.class)
+	public ResponseEntity<ResponseDTO> handleAppException(AppException e) {
+		HttpStatus httpStatus = e.getHttpStatus();
+		ResponseDTO resp = ResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.message(e.getMessage())
+				.statusCode(httpStatus.value())
+				.build();
+
+		return new ResponseEntity<>(resp, httpStatus);
+	}
+
+	@ExceptionHandler({ ConstraintViolationException.class, MissingServletRequestParameterException.class,
+			MethodArgumentNotValidException.class })
+	public ResponseEntity<ResponseDTO> handleValidationException(Exception e) {
+
+		String message = e.getMessage();
+
+		if (e instanceof MethodArgumentNotValidException) {
+			int start = message.lastIndexOf("[") + 1;
+			int end = message.lastIndexOf("]") - 1;
+			message = message.substring(start, end);
+		}
+
+		System.out.println(message);
+
+		ResponseDTO resp = ResponseDTO.builder()
+				.timestamp(LocalDateTime.now())
+				.message(message)
+				.statusCode(HttpStatus.BAD_REQUEST.value()).build();
+
+		return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
+	}
+
 }

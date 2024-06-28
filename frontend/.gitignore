@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+*/application.yml
+
+
+
 # testing
 /coverage
 
