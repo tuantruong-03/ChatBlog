@@ -3,10 +3,12 @@ package simple.blog.backend.service.impl;
 import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import jakarta.mail.MessagingException;
@@ -27,8 +29,9 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 	private final EmailVerificationTokenRepository emailVerificationTokenRepository;
 	private final UserRepository userRepository;
 	
+	@Async
 	@Override
-	public void sendEmailConfirmation(String recipientEmail) throws UnsupportedEncodingException, MessagingException {
+	public CompletableFuture<Void> sendEmailConfirmation(String recipientEmail) throws UnsupportedEncodingException, MessagingException {
 	    String token = UUID.randomUUID().toString();
 	    
 	    EmailVerificationToken emailVerificationToken = new EmailVerificationToken(recipientEmail, token);
@@ -41,7 +44,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 	    helper.setTo(recipientEmail);
 
 	    String subject = "Please confirm your account";
-	    String link = "http://localhost:3000/confirm_account?token=" + token;
+	    String link = "http://localhost:3000/confirm-account?token=" + token;
 
 	    String content = "<p>Hello,</p>"
 	                    + "<p>Thank you for registering with Simple Blog.</p>"
@@ -54,6 +57,7 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 
 	    helper.setText(content, true);
 	    javaMailSender.send(message);
+		return CompletableFuture.completedFuture(null);
 	}
 	
 	@Override
@@ -69,15 +73,17 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 	public boolean confirmAccountRegistration(String token) throws UnsupportedEncodingException, MessagingException {
 		
         EmailVerificationToken emailToken = emailVerificationTokenRepository.findByToken(token);
+		System.out.println("emailToken " + emailToken);
+        
         if (emailToken == null) {
-            throw new AppException("Token not found", HttpStatus.NOT_FOUND);
+            throw new AppException("Email token not found", HttpStatus.NOT_FOUND);
         }
         
         User user = userRepository.findByEmail(emailToken.getUserEmail());
         if (user == null) {
             throw new AppException("User not found", HttpStatus.NOT_FOUND);
         }
-
+        
 		// if the token has not expired
 	    if (!isTokenExpired(emailToken)) {
 	        // activate user account
@@ -85,12 +91,12 @@ public class EmailVerificationTokenServiceImpl implements EmailVerificationToken
 	        userRepository.save(user);
 
 	        // Delete token from the database
-	        emailVerificationTokenRepository.delete(emailToken);
+	        emailVerificationTokenRepository.deleteByUserEmail(user.getEmail());
 	        return true;
 	    } 
 	    else {
 	    	// delete old token
-	    	emailVerificationTokenRepository.delete(emailToken);
+	    	emailVerificationTokenRepository.deleteByUserEmail(user.getEmail());
 	    	// send new email
 	    	sendEmailConfirmation(user.getEmail());
 	    	return false;

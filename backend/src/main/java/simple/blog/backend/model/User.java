@@ -12,40 +12,34 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NonNull;
 import lombok.Setter;
+import simple.blog.backend.enums.Provider;
+import simple.blog.backend.enums.Status;
 
 @Document("users")
 @Getter
 @Setter
 @Builder
-public class User extends AbstractEntity implements UserDetails  {
+public class User implements UserDetails  {
     @Transient //this field is not persisted in the database
     public static final String SEQUENCE_NAME = "users_sequence";
 
     @Id
     private Integer userId;
 
-    @NonNull // For constructor
     private String username;
-    @NonNull // For constructor
     private String password;
-    @NonNull // For constructor
     private String email;
-    @NonNull
     private String firstName;
-    @NonNull
     private String lastName;
-    @NonNull
     private String profilePicture;
-    @NonNull
     private Boolean isEnabled;
+    private Provider provider;
 
     private Status status;
     
 
     @DBRef
-    @NonNull // For constructor
     private Set<Role> roles;
 
     @Override

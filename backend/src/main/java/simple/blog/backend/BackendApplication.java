@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
+import simple.blog.backend.enums.Provider;
 import simple.blog.backend.model.Role;
 import simple.blog.backend.model.User;
 import simple.blog.backend.repository.RoleRepository;
@@ -19,13 +21,13 @@ public class BackendApplication implements CommandLineRunner {
 	private UserRepository userRepository;
 	@Autowired
 	private RoleRepository roleRepository;
+	@Autowired
+	private PasswordEncoder passwordEncoder;
 
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);
 	}
 
-
-//
 	@Override
 	public void run(String... args) throws Exception {
 		Role adminRole;
@@ -45,13 +47,14 @@ public class BackendApplication implements CommandLineRunner {
 			roles.add(roleRepository.findByAuthority("ROLE_ADMIN"));
 			User admin = User.builder()
 					.username("admin")
-					.password("123")
+					.password(passwordEncoder.encode("123456"))
 					.email("admin@gmail")
 					.firstName("Im")
 					.lastName("Admin")
 					.profilePicture("")
 					.isEnabled(true)
 					.roles(roles)
+					.provider(Provider.LOCAL)
 					.build();
 			userRepository.save(admin);
 		}
@@ -60,14 +63,15 @@ public class BackendApplication implements CommandLineRunner {
 				Set<Role> roles = new HashSet<>();
 				roles.add(roleRepository.findByAuthority("ROLE_USER"));
 				User user = User.builder()
-						.username("user")
-						.password("123")
-						.email("user@gmail")
+						.username("user" + i)
+						.password(passwordEncoder.encode("123456"))
+						.email("user" + i + "@gmail")
 						.firstName("Im")
 						.lastName("User")
 						.profilePicture("")
 						.isEnabled(true)
 						.roles(roles)
+						.provider(Provider.LOCAL)
 						.build();
 				userRepository.save(user);
 			}

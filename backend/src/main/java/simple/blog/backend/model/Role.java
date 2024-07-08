@@ -15,7 +15,7 @@ import lombok.Setter;
 @Setter
 @Document("roles")
 @RequiredArgsConstructor // Add @NonNull
-public class Role extends AbstractEntity implements GrantedAuthority {
+public class Role implements GrantedAuthority {
 
     @Transient //this field is not persisted in the database
     public static final String SEQUENCE_NAME = "roles_sequence";
@@ -26,7 +26,6 @@ public class Role extends AbstractEntity implements GrantedAuthority {
 
     @NonNull
     private String authority;
-
 
     @Override
     public String getAuthority() {
