@@ -76,11 +76,23 @@ public class AuthControllerV1 {
         return new ResponseEntity<>(respponse, HttpStatus.OK); 
 
 	}
+	@PostMapping("/facebook-login")
+	public ResponseEntity<ApiResponse> faecbookLogin(@Valid @RequestBody OAuthTokenRequest requestBody) {
+		UserLoginResponse userLoginResponse = userService.facebookLogin(requestBody.getToken());
+		ApiResponse respponse = ApiResponse.builder()
+    			.timestamp(LocalDateTime.now())
+    			.message("User is authenticated")
+    			.statusCode(HttpStatus.OK.value())
+    			.data(userLoginResponse)
+    			.build();
+        return new ResponseEntity<>(respponse, HttpStatus.OK); 
+
+	}
 
 	
 	@PostMapping("/refresh-token")
 	public ResponseEntity<ApiResponse> refreshToken(@Valid @RequestBody RefreshTokenRequest request) {
-
+		System.out.println("refresh token controller");
 		ApiResponse respponse = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
     			.message("User is authenticated")

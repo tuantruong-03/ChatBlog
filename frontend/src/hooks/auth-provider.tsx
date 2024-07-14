@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, ReactNode, useContext } from 'react
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from 'axios';
-import { LOGIN_POST_ENDPOINT } from '../constants/api';
+import { LOGIN_POST_ENDPOINT } from '../constants/backend-server';
 
 // Initial state with authentication check
 const getAccessToken = () => {
@@ -15,19 +15,8 @@ const getRefreshToken = () => {
     return refreshToken;
 };
 
-const getUser = () => {
-    const userJson = Cookies.get('user') || null;
-    try {
-        return userJson ? JSON.parse(userJson) : null;
-    } catch (e) {
-        console.error('Failed to parse user data:', e);
-        return null;
-    }
-};
-
 const authStateInit = {
-    isAuthenticated: !!getUser(),
-    user: getUser(),
+    isAuthenticated: !!getAccessToken(),
     accessToken: getAccessToken(),
     refreshToken: getRefreshToken(),
     login: async (input: object) => Promise<any>,
@@ -59,23 +48,20 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
             if (response.status === 200) { // OK
                 console.log(response)
-                const user = response.data.data.user;
                 const accessToken = response.data.data.accessToken;
                 const refreshToken = response.data.data.refreshToken;
-                Cookies.set('user', JSON.stringify(user), { path: '/' });
                 Cookies.set('accessToken', accessToken, { path: '/' });
                 Cookies.set('refreshToken', refreshToken, { path: '/' });
 
                 setAuthState({
                     isAuthenticated: true,
-                    user,
                     accessToken,
                     refreshToken,
                     login,
                     logout,
                     setAuthState
                 });
-                navigate("/user-list");
+                navigate("/");
             } else {
                 return response.data.message;
             }
@@ -88,11 +74,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Define logout function
     const logout = () => {
         Cookies.remove("accessToken", { path: '/' });
-        Cookies.remove("user", { path: '/' });
         Cookies.remove("refreshToken", { path: '/' });
         setAuthState({
             isAuthenticated: false,
-            user: null,
             accessToken: null,
             refreshToken: null,
             login,

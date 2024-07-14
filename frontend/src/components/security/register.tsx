@@ -6,7 +6,7 @@ import 'boxicons/css/boxicons.min.css';
 
 import { userRegistrationValidation} from '../../utils/vadliation-schema';
 import axios from 'axios';
-import { REGISTER_POST_ENDPOINT } from '../../constants/api';
+import { REGISTER_POST_ENDPOINT } from '../../constants/backend-server';
 import { DEFAULT_AVA_URL } from '../../constants/app';
 
 const Register: React.FC = () => {

@@ -6,8 +6,13 @@ import { useAuth } from '../../hooks/auth-provider';
 import { GoogleLogin, useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import { REGISTER_POST_ENDPOINT, SERVER_BASE_URL } from '../../constants/api';
+import {  SERVER_BASE_URL } from '../../constants/backend-server';
 import { useNavigate } from 'react-router-dom';
+import FacebookLogin from '@greatsumini/react-facebook-login';
+import { IResolveParams, LoginSocialFacebook, LoginSocialGoogle } from 'reactjs-social-login';
+const facebookClientId = process.env.REACT_APP_FACEBOOK_CLIENT_ID || '';
+const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID ||''
+
 
 const Login: React.FC = () => {
     const navigate = useNavigate();
@@ -48,23 +53,19 @@ const Login: React.FC = () => {
                 const response = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/google-login`, { token: access_token })
                 if (response.status == 200) {
                     console.log(response)
-                    const user = response.data.data.user;
                     const accessToken = response.data.data.accessToken;
                     const refreshToken = response.data.data.refreshToken;
-                    Cookies.set('user', JSON.stringify(user), { path: '/' });
                     Cookies.set('accessToken', accessToken, { path: '/' });
                     Cookies.set('refreshToken', refreshToken, { path: '/' });
-                    console.log(user);
-                    
 
-                    auth.setAuthState((prevState: any)=> ({
+
+                    auth.setAuthState((prevState: any) => ({
                         ...prevState,
                         isAuthenticated: true,
-                        user,
                         accessToken,
                         refreshToken,
                     }));
-                    navigate("/user-list");
+                    navigate("/");
                 }
 
             } catch (error) {
@@ -72,7 +73,32 @@ const Login: React.FC = () => {
             }
         },
 
+
     })
+    const facebookLogin = async (response: any) => {
+        console.log("response ", response)
+        if (response.accessToken) {
+            try {
+                const res = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/facebook-login`, { token: response.accessToken });
+                if (res.status === 200) {
+                    const accessToken = res.data.data.accessToken;
+                    const refreshToken = res.data.data.refreshToken;
+                    Cookies.set('accessToken', accessToken, { path: '/' });
+                    Cookies.set('refreshToken', refreshToken, { path: '/' });
+
+                    auth.setAuthState((prevState: any) => ({
+                        ...prevState,
+                        isAuthenticated: true,
+                        accessToken,
+                        refreshToken,
+                    }));
+                    navigate("/");
+                }
+            } catch (error) {
+                console.error('Error logging in with Facebook:', error);
+            }
+        }
+    }
 
     return (
         <section className="container forms">
@@ -113,11 +139,21 @@ const Login: React.FC = () => {
                     </div>
                 </div>
                 <div className="line"></div>
+
                 <div className="media-options">
-                    <a href="#" style={{ cursor: 'pointer' }} className="field facebook">
-                        <img src="https://www.logo.wine/a/logo/Facebook/Facebook-f_Logo-White-Dark-Background-Logo.wine.svg" alt="Facebook Icon" className="facebook-icon" />
-                        <span>Login with Facebook</span>
-                    </a>
+                    <FacebookLogin
+                        appId={facebookClientId}
+                        scope='email,public_profile'
+                        onSuccess={facebookLogin}
+                        fields='email'
+                        onFail={(error) => console.error('Facebook login error:', error)}
+                        render={({ onClick }) => (
+                            <a onClick={onClick} style={{ cursor: 'pointer' }} className="field facebook">
+                                <img src="https://www.logo.wine/a/logo/Facebook/Facebook-f_Logo-White-Dark-Background-Logo.wine.svg" alt="Facebook Icon" className="facebook-icon" />
+                                <span>Login with Facebook</span>
+                            </a>
+                        )}
+                    />
                 </div>
                 <div className="media-options">
                     <a onClick={() => googleLogin()} style={{ cursor: 'pointer' }} className="field google">

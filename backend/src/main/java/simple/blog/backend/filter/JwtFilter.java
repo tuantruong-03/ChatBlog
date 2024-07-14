@@ -56,6 +56,7 @@ public class JwtFilter extends OncePerRequestFilter {
 			filterChain.doFilter(request, response);
 			return;
 		}
+
 		final String accessToken = resolveToken(request);
 		if (accessToken == null || accessToken.equals("null")) {
 			SecurityContextHolder.clearContext();
@@ -68,33 +69,15 @@ public class JwtFilter extends OncePerRequestFilter {
 
 			if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 				UserDetails userDetails = userService.loadUserByUsername(username);
-
 				if (jwtUtil.isTokenValid(accessToken)) { // If accessToken is valid (not expired, right username, ...)
 					UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails,
 							null, userDetails.getAuthorities());
 					token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 					SecurityContextHolder.getContext().setAuthentication(token);
-				} else { // If accessToken is not valid, then validate refreshToken
-//					RefreshToken refreshTokenEntity = refreshTokenService.findByUsername(username);
-//					String refreshToken = refreshTokenEntity.getToken();
-//					if (jwtUtil.isTokenValid(refreshToken)) {
-//						String newAccessToken = jwtUtil.generateAccessToken(username);
-//						response.setHeader("Authorization", "Bearer " + newAccessToken); // Set new token in response
-//																							// header'
-//						UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(userDetails,
-//								null, userDetails.getAuthorities());
-//						token.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-//						SecurityContextHolder.getContext().setAuthentication(token);
-//					} else {
-//						SecurityContextHolder.clearContext();
-//						response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-//						return;
-//					}
-				}
+				} 
 			}
 			
 		} catch (ExpiredJwtException e) {
-			System.out.println("TOKEN IS EXPIRED!!!");
 			response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token expired");
 			SecurityContextHolder.clearContext();
 			return;

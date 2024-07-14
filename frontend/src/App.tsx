@@ -11,7 +11,6 @@ import ConfirmAccount from './components/security/confirm-account';
 
 import { GoogleOAuthProvider } from '@react-oauth/google';
 const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID ||''
-console.log(googleClientId);
 
 
 
@@ -26,7 +25,7 @@ function App() {
             <Route path='/register' element={<Register />} />
             <Route path='/confirm-account' element={<ConfirmAccount />} />
             <Route element={<ProtectedRoute />}>
-              <Route path='*' element={<Homepage />} />
+              <Route path='/' element={<Homepage />} />
             </Route>
           </Routes>
         </div>

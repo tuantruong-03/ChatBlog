@@ -9,5 +9,6 @@ import simple.blog.backend.model.RefreshToken;
 public interface RefreshTokenRepository extends MongoRepository<RefreshToken, String> {
     RefreshToken findByUsername(String username);
     RefreshToken findByToken(String token);
-    void deleteByUsername(String username);
+    Long deleteRefreshTokenByUsername(String username); // A numeric return type directly removes the matching documents returning the total number of documents removed.
+    Long deleteRefreshTokenByToken(String token); // A numeric return type directly removes the matching documents returning the total number of documents removed.
 }

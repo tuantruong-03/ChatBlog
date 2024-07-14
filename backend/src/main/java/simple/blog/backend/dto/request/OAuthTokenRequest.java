@@ -8,5 +8,5 @@ import lombok.Getter;
 public class OAuthTokenRequest {
     @NotNull(message = "Token must not be empty")
     @NotBlank(message = "Token must not be empty")
-    public String token;
+    private String token;
 }

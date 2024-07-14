@@ -20,13 +20,11 @@ public interface UserService extends UserDetailsService {
 
     public UserLoginResponse login(UserLoginRequest request);
     public UserLoginResponse googleLogin(String accessToken);
+    public UserLoginResponse facebookLogin(String accessToken);
     public UserResponse register(UserRegistrationRequest request) throws UnsupportedEncodingException, MessagingException;
 
     @Override
-    default UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'loadUserByUsername'");
-    }
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException;
 
 
 

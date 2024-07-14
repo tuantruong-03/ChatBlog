@@ -7,6 +7,7 @@ import simple.blog.backend.model.RefreshToken;
 
 public interface RefreshTokenService {
     RefreshToken findByUsername(String username);
+    RefreshToken create(String username, String token);
     
     RefreshTokenResponse refreshToken(RefreshTokenRequest request);
 }

@@ -8,7 +8,6 @@ import lombok.Setter;
 @Getter
 @Builder
 public class UserLoginResponse {
-    private UserResponse user;
     private String accessToken;
     private String refreshToken;
 

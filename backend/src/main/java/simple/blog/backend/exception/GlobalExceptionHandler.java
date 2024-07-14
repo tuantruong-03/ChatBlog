@@ -12,29 +12,29 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import jakarta.validation.ConstraintViolationException;
 import simple.blog.backend.dto.response.ApiResponse;
 
-// @RestControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ApiResponse> handleUnwantedException(Exception e) {
-		ApiResponse resp = ApiResponse.builder()
+		ApiResponse response = ApiResponse.builder()
 				.timestamp(LocalDateTime.now())
 				.message(e.getMessage())
 				.statusCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
 				.build();
 
-		return new ResponseEntity<>(resp, HttpStatus.INTERNAL_SERVER_ERROR);
+		return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
 	}
 
 	@ExceptionHandler(AppException.class)
 	public ResponseEntity<ApiResponse> handleAppException(AppException e) {
 		HttpStatus httpStatus = e.getHttpStatus();
-		ApiResponse resp = ApiResponse.builder()
+		ApiResponse response = ApiResponse.builder()
 				.timestamp(LocalDateTime.now())
 				.message(e.getMessage())
 				.statusCode(httpStatus.value())
 				.build();
 
-		return new ResponseEntity<>(resp, httpStatus);
+		return new ResponseEntity<>(response, httpStatus);
 	}
 
 	@ExceptionHandler({ ConstraintViolationException.class, MissingServletRequestParameterException.class,
@@ -51,12 +51,12 @@ public class GlobalExceptionHandler {
 
 		System.out.println(message);
 
-		ApiResponse resp = ApiResponse.builder()
+		ApiResponse response = ApiResponse.builder()
 				.timestamp(LocalDateTime.now())
 				.message(message)
 				.statusCode(HttpStatus.BAD_REQUEST.value()).build();
 
-		return new ResponseEntity<>(resp, HttpStatus.BAD_REQUEST);
+		return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
 	}
 
 }
