@@ -2,7 +2,7 @@ import { createContext, useState, useEffect, ReactNode, useContext } from 'react
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from 'axios';
-import { LOGIN_POST_ENDPOINT } from '../constants/backend-server';
+import {SERVER_BASE_URL } from '../constants/backend-server';
 
 // Initial state with authentication check
 const getAccessToken = () => {
@@ -15,13 +15,14 @@ const getRefreshToken = () => {
     return refreshToken;
 };
 
+
 const authStateInit = {
     isAuthenticated: !!getAccessToken(),
     accessToken: getAccessToken(),
     refreshToken: getRefreshToken(),
     login: async (input: object) => Promise<any>,
-    logout: () => {},
-    setAuthState: (state: any) => {}
+    logout: () => { },
+    setAuthState: (state: any) => { }
 };
 
 const AuthContext = createContext(authStateInit);
@@ -37,7 +38,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     // Define login function
     const login = async (input: object): Promise<any> => {
         try {
-            const response = await axios(LOGIN_POST_ENDPOINT, {
+            const response = await axios(`${SERVER_BASE_URL}/api/v1/auth/login`, {
                 method: 'POST',
                 withCredentials: true, // This is critical for cookies to be sent and received
                 headers: {
@@ -50,8 +51,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
                 console.log(response)
                 const accessToken = response.data.data.accessToken;
                 const refreshToken = response.data.data.refreshToken;
-                Cookies.set('accessToken', accessToken, { path: '/' });
-                Cookies.set('refreshToken', refreshToken, { path: '/' });
+                const roles = response.data.data.roles;
+                Cookies.set('accessToken', accessToken, { path: '/', secure: true});
+                Cookies.set('refreshToken', refreshToken, { path: '/', secure: true});
+                localStorage.setItem("roles", JSON.stringify(roles));
 
                 setAuthState({
                     isAuthenticated: true,
@@ -72,18 +75,37 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
 
     // Define logout function
-    const logout = () => {
-        Cookies.remove("accessToken", { path: '/' });
-        Cookies.remove("refreshToken", { path: '/' });
-        setAuthState({
-            isAuthenticated: false,
-            accessToken: null,
-            refreshToken: null,
-            login,
-            logout,
-            setAuthState
-        });
-        navigate("/login");
+    const logout = async () => {
+        console.log("logout")
+        const { refreshToken } = authState
+        try {
+            const response = await axios.delete(`${SERVER_BASE_URL}/api/v1/auth/logout`, {
+                withCredentials: true, // This is critical for cookies to be sent and received
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                data: { refreshToken}
+            });
+            if (response.status == 204) {// NO CONTENT 
+                Cookies.remove("accessToken");
+                Cookies.remove("refreshToken");
+                localStorage.removeItem("roles");
+                setAuthState({
+                    isAuthenticated: false,
+                    accessToken: null,
+                    refreshToken: null,
+                    login,
+                    logout,
+                    setAuthState
+                });
+                navigate("/login");
+            }
+
+        } catch (err: any) {
+            console.error("Login Error: ", err);
+            return err.response.data.message;
+        }
+
     };
 
     useEffect(() => {

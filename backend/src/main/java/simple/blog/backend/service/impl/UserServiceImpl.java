@@ -1,16 +1,9 @@
 package simple.blog.backend.service.impl;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import javax.print.attribute.standard.MediaSize.NA;
 
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -25,20 +18,18 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-
 import jakarta.mail.MessagingException;
 import lombok.RequiredArgsConstructor;
 import simple.blog.backend.dto.request.UserLoginRequest;
+import simple.blog.backend.dto.request.UserLogoutRequest;
 import simple.blog.backend.dto.request.UserRegistrationRequest;
+import simple.blog.backend.dto.request.UserUpdateRequest;
 import simple.blog.backend.dto.response.FacebookUserInfoResponse;
 import simple.blog.backend.dto.response.GoogleUserInfoResponse;
 import simple.blog.backend.dto.response.UserLoginResponse;
-import simple.blog.backend.dto.response.UserResponse;
 import simple.blog.backend.enums.Provider;
+import simple.blog.backend.enums.Status;
 import simple.blog.backend.exception.AppException;
-import simple.blog.backend.mapper.UserMapper;
 import simple.blog.backend.model.RefreshToken;
 import simple.blog.backend.model.Role;
 import simple.blog.backend.model.User;
@@ -53,21 +44,17 @@ import simple.blog.backend.util.JwtUtil;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-	private final GoogleIdTokenVerifier googleIdTokenVerifier;
 	private final JwtUtil jwtUtil;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final UserRepository userRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final RoleRepository roleRepository;
-	private final UserMapper userMapper;
 	private final EmailVerificationTokenService emailVerificationTokenService;
 
 	@Override
-	public List<UserResponse> findAllUsers() {
+	public List<User> findAllUsers() {
 		List<User> usersList = userRepository.findAll();
-		return usersList.stream()
-				.map(user -> userMapper.toUserResponse(user))
-				.collect(Collectors.toList());
+		return usersList;
 	}
 
 	@Override
@@ -80,16 +67,16 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public UserResponse findUserByUserId(Integer userId) {
+	public User findUserByUserId(Integer userId) {
 		User user = userRepository.findByUserId(userId);
 		if (user == null) {
 			throw new AppException("User not found with id: " + userId, HttpStatus.NOT_FOUND);
 		}
-		return userMapper.toUserResponse(user);
+		return user;
 	}
 
 	@Override
-	public UserResponse register(UserRegistrationRequest request)
+	public User register(UserRegistrationRequest request)
 			throws UnsupportedEncodingException, MessagingException {
 
 		if (userRepository.existsByUsername(request.getUsername())) {
@@ -121,7 +108,7 @@ public class UserServiceImpl implements UserService {
 
 		emailVerificationTokenService.sendEmailConfirmation(request.getEmail());
 
-		return userMapper.toUserResponse(user);
+		return user;
 	}
 
 	private UserLoginResponse getUserLoginResponse(User user) {
@@ -139,7 +126,9 @@ public class UserServiceImpl implements UserService {
 		UserLoginResponse userLoginResponse = UserLoginResponse.builder()
 				.accessToken(accessToken)
 				.refreshToken(refreshToken)
+				.roles(user.getRoles())
 				.build();
+		
 		return userLoginResponse;
 	}
 
@@ -156,11 +145,14 @@ public class UserServiceImpl implements UserService {
 		if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
 			throw new AppException("Invalid username or password", HttpStatus.UNAUTHORIZED);
 		}
+		
+		user.setStatus(Status.ONLINE);
+		
 		return getUserLoginResponse(user);
 	}
 
 	@Override
-	public UserLoginResponse googleLogin(String accessToken) {
+	public UserLoginResponse GoogleLogin(String accessToken) {
 		final String googleUserInfoEndpoint = "https://www.googleapis.com/oauth2/v3/userinfo";
 		RestTemplate restTemplate = new RestTemplate();
 
@@ -196,6 +188,7 @@ public class UserServiceImpl implements UserService {
 					.roles(roles)
 					.password("")
 					.isEnabled(userResponse.isEmailVerified())
+					.status(Status.ONLINE)
 					.build();
 			userRepository.save(user);
 			return getUserLoginResponse(user);
@@ -203,7 +196,7 @@ public class UserServiceImpl implements UserService {
 	}
 
 	@Override
-	public UserLoginResponse facebookLogin(String accessToken) {
+	public UserLoginResponse FacebookLogin(String accessToken) {
 		final String facebookUserInfoEndpoint = "https://graph.facebook.com/me?fields=id,first_name,last_name,email,picture";
 		RestTemplate restTemplate = new RestTemplate();
 
@@ -236,11 +229,43 @@ public class UserServiceImpl implements UserService {
 					.provider(Provider.FACEBOOK)
 					.roles(roles)
 					.password("")
+					.status(Status.ONLINE)
 					.isEnabled(true)
 					.build();
 			userRepository.save(user);
 			return getUserLoginResponse(user);
 		}
+	}
+
+	@Override
+	public void logout(UserLogoutRequest request) {
+		refreshTokenRepository.deleteRefreshTokenByToken(request.getRefreshToken());
+	}
+
+	@Override
+	public User updateUser(Integer userId, UserUpdateRequest userCreationRequest) {
+		User existingUser = userRepository.findByUserId(userId);
+		if (existingUser == null) {
+			throw new AppException("User not found with ID " + userId, HttpStatus.NOT_FOUND);
+		}
+		existingUser.setUsername(userCreationRequest.getUsername());
+		existingUser.setFirstName(userCreationRequest.getFirstName());
+		existingUser.setLastName(userCreationRequest.getLastName());
+		return userRepository.save(existingUser);
+	}
+
+	@Override
+	public void deleteUserById(Integer userId) {
+		User existingUser = userRepository.findByUserId(userId);
+		if (existingUser == null) {
+			throw new AppException("User not found with ID " + userId, HttpStatus.NOT_FOUND);
+		}
+		userRepository.delete(existingUser);
+	}
+
+	@Override
+	public List<User> searchUsers(String query) {
+		return userRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCase(query, query);
 	}
 
 }

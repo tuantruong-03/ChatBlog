@@ -1,31 +1,17 @@
-import { useEffect, useState } from "react";
-import useApi from "../hooks/api";
-import { SERVER_BASE_URL } from "../constants/backend-server";
+import { jwtDecode } from "jwt-decode";
+import { useAuth } from "../hooks/auth-provider";
+import UserRoutes from "./user/user-routes";
 
 const Homepage = () => {
-    console.log("Asd")
-    const api = useApi();
-    const [username, setUsername] = useState<string>("");
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await api.get(`/api/v1/users/truonganhtuan3092@gmail.com`)
-                if (response.status == 200) {
-                    const data = response.data.data;
-                    console.log(data.username)
-                    setUsername(data.username)
-                }
-            } catch (err) {
-                console.log(err)
-            }
-
-        }
-        fetchData();
-    }, [])
-
+    const auth = useAuth();
+    const dedcoded: any = jwtDecode(auth.accessToken);
+    const roles: any[] = [];
+    roles.push(dedcoded?.roles);
+    if (roles.includes("ROLE_USER")){
+        return <UserRoutes/>
+    }
     return (
-        <>Welcome to homepage {username}</>
+        <>Not authorized</>
     )
 }
 export default Homepage;

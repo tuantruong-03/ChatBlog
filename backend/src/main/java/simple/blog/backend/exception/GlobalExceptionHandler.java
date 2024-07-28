@@ -49,8 +49,6 @@ public class GlobalExceptionHandler {
 			message = message.substring(start, end);
 		}
 
-		System.out.println(message);
-
 		ApiResponse response = ApiResponse.builder()
 				.timestamp(LocalDateTime.now())
 				.message(message)

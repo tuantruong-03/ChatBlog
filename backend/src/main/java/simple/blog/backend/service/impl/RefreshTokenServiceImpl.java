@@ -54,7 +54,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             System.out.println("refresh token is not valid");
             refreshTokenRepository.deleteRefreshTokenByToken(request.getToken());
             throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
-        }
+        }   
     }
 
     @Override

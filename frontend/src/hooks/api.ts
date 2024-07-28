@@ -30,9 +30,8 @@ const useApi = () => {
       if (error.response.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
-          const response = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/refresh-token`, { refreshToken: refreshToken }, { withCredentials: true });
+          const response = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/refresh-token`, { token: refreshToken }, { withCredentials: true });
           if (response.status === 200) {
-            console.log("refesh token now");
             const newAccessToken = response.data.data.newAccessToken;
             Cookies.set('accessToken', newAccessToken, { path: '/' });
             setAuthState((prevState : any)=> ({

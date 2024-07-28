@@ -26,8 +26,8 @@ import jakarta.annotation.PostConstruct;
 public class JwtUtil {
     private SecretKey key; // the secret key used to sign and verify the JWT.
 
-    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 10L * 1000; // 30s
-    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 0; // 0s
+    private static final long ACCESS_TOKEN_EXPIRATION_TIME = 60L * 1000 *60*6; // 15m
+//    private static final long REFRESH_TOKEN_EXPIRATION_TIME = 0; // 0s
 
     @Value("${jwt.secret}")
     private String secretString;
@@ -49,7 +49,7 @@ public class JwtUtil {
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .claim("roles", determinRoles(userDetails))
-                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME))
+                .expiration(new Date(System.currentTimeMillis() + ACCESS_TOKEN_EXPIRATION_TIME)) 
                 .signWith(key)
                 .compact();
     }
@@ -59,7 +59,7 @@ public class JwtUtil {
                 .subject(userDetails.getUsername())
                 .issuedAt(new Date(System.currentTimeMillis()))
                 .claim("roles", determinRoles(userDetails))
-                .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME))
+                // .expiration(new Date(System.currentTimeMillis() + REFRESH_TOKEN_EXPIRATION_TIME)) // Comment to set refreshToken non-expired
                 .signWith(key)
                 .compact();
     }
@@ -91,7 +91,6 @@ public class JwtUtil {
 
     // Check if token is expired
     public boolean isTokenExpired(String token) {
-        System.out.println("is token expired");
         return extractExpiration(token).before(new Date());
     }
 

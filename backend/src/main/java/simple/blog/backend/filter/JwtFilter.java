@@ -19,8 +19,6 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import simple.blog.backend.model.RefreshToken;
-import simple.blog.backend.service.RefreshTokenService;
 import simple.blog.backend.service.UserService;
 import simple.blog.backend.util.JwtUtil;
 
@@ -30,7 +28,6 @@ public class JwtFilter extends OncePerRequestFilter {
 
 	private final JwtUtil jwtUtil;
 	private final UserService userService;
-	private final RefreshTokenService refreshTokenService;
 
 	private static final Set<String> EXCLUDE_URL_PATTERNS = Stream.of("/api/v1/auth/", "/api/v1/verification/", "/public/")
 			.collect(Collectors.toSet());

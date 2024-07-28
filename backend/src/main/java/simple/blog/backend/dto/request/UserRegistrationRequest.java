@@ -8,6 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import simple.blog.backend.enums.Provider;
+import simple.blog.backend.model.User;
 import simple.blog.backend.validation.EnumValue;
 
 @Getter
@@ -21,12 +22,12 @@ public class UserRegistrationRequest {
 
     @NotBlank(message =  "First name must be not blank!")
     @NotNull
-    @Pattern(regexp = "([A-Z][a-z]*)", message = "First letter  of first name must be capitalized!")
+    @Pattern(regexp = User.VIETNAMESE_NAME_REGEX, message = "First letter  of first name must be capitalized!")
     private String firstName;
     
     @NotBlank(message =  "Last name must be not blank!")
     @NotNull
-    @Pattern(regexp = "([A-Z][a-z]*)", message = "First letter of last name must be capitalized!")
+    @Pattern(regexp = User.VIETNAMESE_NAME_REGEX, message = "First letter of last name must be capitalized!")
     private String lastName;
 
     @NotNull

@@ -30,7 +30,7 @@ public class AppConfig {
 
     // Config asynchronous
     @Bean
-    public Executor taskExecutor() {
+    Executor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(2); //  executor will maintain at least 2 threads in the pool, even if they are idle.
         executor.setMaxPoolSize(2); // This means the pool will not grow beyond 2 threads, even under heavy load.
