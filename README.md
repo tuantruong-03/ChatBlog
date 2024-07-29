@@ -33,10 +33,10 @@
     <h3>Steps</h3>
     <ol>
         <li><strong>Clone the repository</strong>:
-            <pre><code>git clone https://github.com/PhuongTay1109/BuddyChat.git</code></pre>
+            <pre><code>git clone [https://github.com/PhuongTay1109/BuddyChat.git](https://github.com/tuantruong-03/ChatBlog.git)</code></pre>
         </li>
         <li><strong>Navigate to the project directory</strong>:
-            <pre><code>cd BuddyChat</code></pre>
+            <pre><code>cd ChatBlog</code></pre>
         </li>
         <li><strong>Set up the back-end</strong>:
             <pre><code>cd backend
