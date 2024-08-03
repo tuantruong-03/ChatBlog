@@ -4,7 +4,7 @@ import { SERVER_BASE_URL } from '../constants/backend-server';
 import Cookies from 'js-cookie';
 
 const useApi = () => {
-  const { accessToken, refreshToken, setAuthState } = useAuth();
+  const auth = useAuth();
   
   const api = axios.create({
     baseURL: SERVER_BASE_URL,
@@ -13,8 +13,8 @@ const useApi = () => {
 
   api.interceptors.request.use(
     config => {
-      if (accessToken) {
-        config.headers['Authorization'] = `Bearer ${accessToken}`;
+      if (auth.accessToken) {
+        config.headers['Authorization'] = `Bearer ${auth.accessToken}`;
       }
       return config;
     },
@@ -30,11 +30,11 @@ const useApi = () => {
       if (error.response.status === 401 && !originalRequest._retry) {
         originalRequest._retry = true;
         try {
-          const response = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/refresh-token`, { token: refreshToken }, { withCredentials: true });
+          const response = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/refresh-token`, { token: auth.refreshToken }, { withCredentials: true });
           if (response.status === 200) {
             const newAccessToken = response.data.data.newAccessToken;
             Cookies.set('accessToken', newAccessToken, { path: '/' });
-            setAuthState((prevState : any)=> ({
+            auth.setAuthState((prevState : any)=> ({
               ...prevState,
               accessToken: newAccessToken
             }));
@@ -43,14 +43,7 @@ const useApi = () => {
           }
         } catch (refreshError) {
           console.error('Failed to refresh access token:', refreshError);
-          setAuthState({
-            isAuthenticated: false,
-            user: null,
-            accessToken: null,
-            refreshToken: null
-          });
-          Cookies.remove('accessToken');
-          Cookies.remove('refreshToken');
+          auth.logout();
           window.location.href = '/login';
         }
       }

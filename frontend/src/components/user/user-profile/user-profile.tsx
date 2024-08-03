@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Form as BootstrapForm, Button, Image, Alert, Spinner } from 'react-bootstrap';
 import { Formik, Field, ErrorMessage } from 'formik';
-import { userUpdateValidation } from '../../utils/vadliation-schema';
-import useApi from '../../hooks/api';
-import { SERVER_BASE_URL } from '../../constants/backend-server';
-import { DEFAULT_AVA_URL } from '../../constants/app';
+import { userUpdateValidation } from '../../../utils/vadliation-schema';
+import useApi from '../../../hooks/api';
+import { SERVER_BASE_URL } from '../../../constants/backend-server';
+import { DEFAULT_AVA_URL } from '../../../constants/app';
 import ChangeProfilePictureModal from './user-profile-picture-modal';
+import { useAuth } from '../../../hooks/auth-provider';
 
 const UserProfile = () => {
   const [userId, setUserId] = useState<number>(-1);
@@ -21,6 +22,7 @@ const UserProfile = () => {
   const [notification, setNotification] = useState<{ show: boolean, message: string } | null>(null);
   const [loading, setLoading] = useState<boolean>(true); // Loading state
   const api = useApi();
+  const auth = useAuth();
 
   useEffect(() => {
     async function fetchData() {
@@ -48,6 +50,20 @@ const UserProfile = () => {
 
   }, [])
 
+  useEffect(() => {
+    const user = {
+      username: formValues.username,
+      firstName: formValues.firstName,
+      lastName: formValues.lastName,
+      email: formValues.email,
+      profilePicture
+    }
+    auth.setAuthState((prev: any) => ({
+      ...prev,
+      user
+    }))
+  }, [profilePicture])
+
   // Initial form values
 
   const handleSubmit = async (values: any) => {
@@ -62,7 +78,18 @@ const UserProfile = () => {
         lastName: data.lastName,
         email: data.email
       })
+      const user = {
+        username: data.username,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        profilePicture
+      }
       setNotification({ show: true, message: 'Profile updated successfully!' });
+      auth.setAuthState((prev: any) => ({
+        ...prev,
+        user
+      }))
 
       setTimeout(() => {
         setNotification(null);
@@ -127,6 +154,7 @@ const UserProfile = () => {
                   <Field
                     type="text"
                     name="username"
+                    readOnly
                     as={BootstrapForm.Control}
                     placeholder="Enter your username"
                     className="shadow form-control-lg"

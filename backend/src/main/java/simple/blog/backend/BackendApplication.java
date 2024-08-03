@@ -9,9 +9,11 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import jakarta.annotation.PreDestroy;
 import simple.blog.backend.enums.Provider;
 import simple.blog.backend.model.Role;
 import simple.blog.backend.model.User;
+import simple.blog.backend.repository.RefreshTokenRepository;
 import simple.blog.backend.repository.RoleRepository;
 import simple.blog.backend.repository.UserRepository;
 
@@ -23,6 +25,8 @@ public class BackendApplication implements CommandLineRunner {
 	private RoleRepository roleRepository;
 	@Autowired
 	private PasswordEncoder passwordEncoder;
+	@Autowired
+	private RefreshTokenRepository refreshTokenRepository;
 
 	public static void main(String[] args) {
 		SpringApplication.run(BackendApplication.class, args);
@@ -76,5 +80,11 @@ public class BackendApplication implements CommandLineRunner {
 				userRepository.save(user);
 			}
 		}
+	}
+	// Auto logout all users
+	@PreDestroy
+	public void onDestroy() throws Exception {
+		System.out.println("Deleting all refresh tokens...");
+		refreshTokenRepository.deleteAll();
 	}
 }

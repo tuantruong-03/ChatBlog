@@ -12,7 +12,7 @@ const UserHomepage = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get(`/api/v1/users/truonganhtuan3092@gmail.com`)
+                const response = await api.get(`/api/v1/users/me`)
                 if (response.status == 200) {
                     const data = response.data.data;
                     setUsername(data.username)

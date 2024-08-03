@@ -6,6 +6,6 @@ import simple.blog.backend.model.ChatRoom;
 import simple.blog.backend.model.User;
 
 public interface ChatRoomService {
-	ChatRoom createChatRoom(List<Integer> userIds);
+	ChatRoom findOrCreatePrivateChatRoom(List<Integer> userIds);
 	List<User> findUsersByChatRoom(String chatRoomId);
 }

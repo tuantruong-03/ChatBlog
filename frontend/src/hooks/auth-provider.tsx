@@ -2,110 +2,119 @@ import { createContext, useState, useEffect, ReactNode, useContext } from 'react
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from 'axios';
-import {SERVER_BASE_URL } from '../constants/backend-server';
+import { SERVER_BASE_URL } from '../constants/backend-server';
+import { CompatClient, Stomp } from '@stomp/stompjs';
 
-// Initial state with authentication check
-const getAccessToken = () => {
-    const accessToken = Cookies.get('accessToken') || null;
-    return accessToken;
-};
+// Helper function to get tokens
+const getAccessToken = () => Cookies.get('accessToken') || null;
+const getRefreshToken = () => Cookies.get('refreshToken') || null;
 
-const getRefreshToken = () => {
-    const refreshToken = Cookies.get('refreshToken') || null;
-    return refreshToken;
-};
+// Define AuthState interface
+interface AuthState {
+    isAuthenticated: boolean;
+    accessToken: string | null;
+    refreshToken: string | null;
+    login: (input: object) => Promise<any>;
+    logout: () => Promise<void>;
+    setAuthState: React.Dispatch<React.SetStateAction<AuthState>>;
+    sockJsClient: any;
+    stompClient: CompatClient | null;
+    user: any;
+}
 
-
-const authStateInit = {
+// Initial state
+const authStateInit: AuthState = {
     isAuthenticated: !!getAccessToken(),
     accessToken: getAccessToken(),
     refreshToken: getRefreshToken(),
-    login: async (input: object) => Promise<any>,
-    logout: () => { },
-    setAuthState: (state: any) => { }
+    login: async (input: object) => Promise.resolve(),
+    logout: async () => Promise.resolve(),
+    setAuthState: () => { },
+    sockJsClient: null,
+    stompClient: null,
+    user: null,
 };
 
-const AuthContext = createContext(authStateInit);
+const AuthContext = createContext<AuthState>(authStateInit);
 
 interface AuthProviderProps {
     children: ReactNode;
 }
 
 export const AuthProvider = ({ children }: AuthProviderProps) => {
-    const [authState, setAuthState] = useState(authStateInit);
+    const [authState, setAuthState] = useState<AuthState>(authStateInit);
     const navigate = useNavigate();
 
     // Define login function
     const login = async (input: object): Promise<any> => {
         try {
-            const response = await axios(`${SERVER_BASE_URL}/api/v1/auth/login`, {
-                method: 'POST',
-                withCredentials: true, // This is critical for cookies to be sent and received
+            const response = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/login`, input, {
+                withCredentials: true,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                data: input
             });
 
-            if (response.status === 200) { // OK
-                console.log(response)
-                const accessToken = response.data.data.accessToken;
-                const refreshToken = response.data.data.refreshToken;
-                const roles = response.data.data.roles;
-                Cookies.set('accessToken', accessToken, { path: '/', secure: true});
-                Cookies.set('refreshToken', refreshToken, { path: '/', secure: true});
-                localStorage.setItem("roles", JSON.stringify(roles));
+            if (response.status === 200) {
+                const { accessToken, refreshToken, roles } = response.data.data;
+                Cookies.set('accessToken', accessToken, { path: '/', secure: true });
+                Cookies.set('refreshToken', refreshToken, { path: '/', secure: true });
+                
+                // Initialize SockJS and Stomp client
 
-                setAuthState({
+                setAuthState((prev: any) => ({
+                    ...prev,
                     isAuthenticated: true,
                     accessToken,
                     refreshToken,
                     login,
                     logout,
-                    setAuthState
-                });
-                navigate("/");
+                    setAuthState,
+                }));
+                navigate('/');
             } else {
                 return response.data.message;
             }
         } catch (err: any) {
-            console.error("Login Error: ", err);
-            return err.response.data.message;
+            console.error('Login Error: ', err);
+            return err.response?.data?.message || 'An error occurred';
         }
     };
 
     // Define logout function
     const logout = async () => {
-        console.log("logout")
-        const { refreshToken } = authState
         try {
+            const { refreshToken } = authState;
             const response = await axios.delete(`${SERVER_BASE_URL}/api/v1/auth/logout`, {
-                withCredentials: true, // This is critical for cookies to be sent and received
+                withCredentials: true,
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
                 },
-                data: { refreshToken}
+                data: { refreshToken },
             });
-            if (response.status == 204) {// NO CONTENT 
-                Cookies.remove("accessToken");
-                Cookies.remove("refreshToken");
-                localStorage.removeItem("roles");
+
+            if (response.status === 204) {
+                Cookies.remove('accessToken');
+                Cookies.remove('refreshToken');
+                authState.stompClient?.disconnect();
+                
                 setAuthState({
                     isAuthenticated: false,
                     accessToken: null,
                     refreshToken: null,
+                    sockJsClient: null,
+                    stompClient: null,
+                    user: null,
                     login,
                     logout,
-                    setAuthState
+                    setAuthState,
                 });
-                navigate("/login");
+                navigate('/login');
             }
-
         } catch (err: any) {
-            console.error("Login Error: ", err);
-            return err.response.data.message;
+            console.error('Logout Error: ', err);
+            return err.response?.data?.message || 'An error occurred';
         }
-
     };
 
     useEffect(() => {
@@ -113,7 +122,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             ...prev,
             login,
             logout,
-            setAuthState
+            setAuthState,
         }));
     }, []);
 

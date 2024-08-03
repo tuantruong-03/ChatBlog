@@ -3,7 +3,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import { userRegistrationValidation } from '../../utils/vadliation-schema';
 import axios from 'axios';
 import { REGISTER_POST_ENDPOINT } from '../../constants/backend-server';
-import { DEFAULT_AVA_URL } from '../../constants/app';
+import { APP_NAME, DEFAULT_AVA_URL } from '../../constants/app';
 import { Link } from 'react-router-dom';
 
 const Register: React.FC = () => {
@@ -57,7 +57,7 @@ const Register: React.FC = () => {
                     <div className="card" >
                         <div className="card-body ">
                         <h1 style={{ fontFamily: 'Billabong' }} className="card-title text-center mb-2">
-                            <Link to="/login" className="text-decoration-none text-black">Simple Blog</Link>                
+                            <Link to="/login" className="text-decoration-none text-black">{APP_NAME}</Link>                
                         </h1>
                         <h5 style={{ fontFamily: 'Billabong' }} className="card-title text-center mb-4">Register</h5>
                             <Formik

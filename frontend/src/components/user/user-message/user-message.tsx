@@ -3,45 +3,19 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button } from 'react-bootstrap';
 import axios from 'axios'; // Import axios or use fetch API
-import { SERVER_BASE_URL } from '../../constants/backend-server';
-import useApi from '../../hooks/api';
+import { SERVER_BASE_URL } from '../../../constants/backend-server';
+import useApi from '../../../hooks/api';
 import SockJS from 'sockjs-client'
+import UserList from './user-list';
 
-interface UserBoxProps {
-    user: any;
-}
-const UserBox = (props: UserBoxProps) => {
-    const {user } = props;
-    return (
-        <li key={user.userId} className="p-2 border-bottom">
-            <div className="d-flex justify-content-between">
-                <div className="d-flex flex-row">
-                    <div>
-                        <img
-                            src={user.profilePicture}
-                            alt="avatar"
-                            className="d-flex align-self-center me-3"
-                            width="60"
-                        />
-                        <span className={`badge ${user.status === 'ONLINE' ? 'bg-success' : 'bg-secondary'} badge-dot`}></span>
-                    </div>
-                    <div className="pt-1">
-                        <p className="fw-bold mb-0 text-decoration-none">{user.firstName + user.lastName}</p>
-                    </div>
-                </div>
-                <div className="pt-1">
-                    <p className="small text-muted mb-1">Just now</p>
-                    <span className="badge bg-danger rounded-pill float-end">3</span>
-                </div>
-            </div>
-        </li>
-    )
-}
+
 
 const UserMessage = () => {
     const [search, setSearch] = useState('');
     const [filteredUsers, setFilteredUsers] = useState([]);
     const [loading, setLoading] = useState(false);
+
+
     const api = useApi();
 
     useEffect(() => {
@@ -77,28 +51,12 @@ const UserMessage = () => {
         setSearch(e.target.value);
     };
 
+    // <Handle socket>
+    
+    // </Handle socket>
+
     return (
         <>
-            {/* Add custom styles */}
-            <style>
-                {`
-                #chat3 .form-control {
-                    border-color: transparent;
-                }
-                #chat3 .form-control:focus {
-                    border-color: transparent;
-                    box-shadow: inset 0px 0px 0px 1px transparent;
-                }
-                .badge-dot {
-                    border-radius: 50%;
-                    height: 10px;
-                    width: 10px;
-                    margin-left: 2.9rem;
-                    margin-top: -.75rem;
-                }
-                `}
-            </style>
-
             <section>
                 <Container className="py-5">
                     <Row>
@@ -109,15 +67,8 @@ const UserMessage = () => {
                                         <Col md={6} lg={5} xl={4} className="mb-4 mb-md-0">
                                             <div className="p-3">
                                                 <div className="input-group rounded mb-3">
-                                                    <Form.Control
-                                                        type="search"
-                                                        placeholder="Search"
-                                                        aria-label="Search"
-                                                        aria-describedby="search-addon"
-                                                        className="rounded"
-                                                        value={search}
-                                                        onChange={handleSearchChange}
-                                                    />
+                                                    <Form.Control type="search" placeholder="Search" aria-label="Search" aria-describedby="search-addon" className="rounded" value={search}
+                                                        onChange={handleSearchChange} />
                                                     <span className="input-group-text border-0" id="search-addon">
                                                         <i className="fas fa-search"></i>
                                                     </span>
@@ -130,7 +81,29 @@ const UserMessage = () => {
                                                             <li className="p-2 text-center">Loading...</li>
                                                         ) : filteredUsers.length > 0 ? (
                                                             filteredUsers.map((user: any) => (
-                                                                <UserBox user={user}/>
+                                                                <li key={user.userId} className="p-2 border-bottom" style={{ cursor: 'pointer' }}>
+                                                                    <div className="d-flex justify-content-between">
+                                                                        <div className="d-flex flex-row">
+                                                                            <div>
+                                                                                <img
+                                                                                    src={user.profilePicture}
+                                                                                    alt="avatar"
+                                                                                    className="d-flex align-self-center me-3"
+                                                                                    width="60"
+                                                                                />
+                                                                                <span className={`badge ${user.status === 'ONLINE' ? 'bg-success' : 'bg-secondary'} badge-dot`}></span>
+                                                                            </div>
+                                                                            <div className="pt-1">
+                                                                                <p className="fw-bold mb-0 text-decoration-none">{user.firstName + user.lastName}</p>
+                                                                                {/* <p>Inbox</p> */}
+                                                                            </div>
+                                                                        </div>
+                                                                        {/* <div className="pt-1">
+                                                                                <p className="small text-muted mb-1">Just now</p>
+                                                                                <span className="badge bg-danger rounded-pill float-end">3</span>
+                                                                            </div> */}
+                                                                    </div>
+                                                                </li>
                                                             ))
                                                         ) : (
                                                             <li className="p-2 text-center">No users found</li>

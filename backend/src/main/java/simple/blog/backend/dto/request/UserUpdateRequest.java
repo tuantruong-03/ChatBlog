@@ -10,9 +10,7 @@ import simple.blog.backend.model.User;
 @Getter
 @ToString
 public class UserUpdateRequest {
-    @NotBlank(message = "Username must be not blank!")
-    @NotNull(message = "Username must be not empty!")
-    private String username;
+    
 
     @NotBlank(message = "First name must be not blank!")
     @NotNull(message = "Username must be not empty!")

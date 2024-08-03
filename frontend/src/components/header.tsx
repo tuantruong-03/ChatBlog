@@ -5,6 +5,7 @@ import useApi from '../hooks/api';
 import { SERVER_BASE_URL } from '../constants/backend-server';
 import { link } from 'fs';
 import { useAuth } from '../hooks/auth-provider';
+import { APP_NAME } from '../constants/app';
 
 const Header = () => {
   const api = useApi();
@@ -17,24 +18,28 @@ const Header = () => {
     profilePicture: '',
   });
 
+
   useEffect(() => {
     async function fetchData() {
       try {
         const response = await api.get(`${SERVER_BASE_URL}/api/v1/users/me`);
         const data = response.data.data;
-        setUserData({
+        const user ={
           username: data.username,
           firstName: data.firstName,
           lastName: data.lastName,
           email: data.email,
           profilePicture: data.profilePicture,
-        });
+        }
+        // console.log(auth.user)
+
+        setUserData(user);
       } catch (err) {
         console.error(err);
       }
     }
     fetchData();
-  }, [api]);
+  }, [auth.user]);
 
   // Memoize the profile image and display name to avoid unnecessary re-renders
   const profileImage = useMemo(() => (
@@ -49,7 +54,7 @@ const Header = () => {
     <Navbar bg="light" expand="lg" fixed='top'>
       <Container>
         <Navbar.Brand as={Link} to="/" className='navbar-brand-name'>
-          Simple Blog
+          {APP_NAME}
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="navbarSupportedContent" />
         <Navbar.Collapse id="navbarSupportedContent">

@@ -10,6 +10,12 @@ import { SERVER_BASE_URL } from '../../constants/backend-server';
 import { Link, useNavigate } from 'react-router-dom';
 import FacebookLogin from '@greatsumini/react-facebook-login';
 import Header from '../header';
+import { CompatClient, Stomp } from '@stomp/stompjs';
+import SockJS from 'sockjs-client';
+import { APP_NAME } from '../../constants/app';
+
+
+
 const facebookClientId = process.env.REACT_APP_FACEBOOK_CLIENT_ID || '';
 
 
@@ -42,27 +48,12 @@ const Login: React.FC = () => {
     const googleLogin = useGoogleLogin({
         onSuccess: async (response) => {
             // console.log(response)
-            const { access_token } = response;
             // console.log(access_token)
 
             try {
-                const response = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/google-login`, { token: access_token })
-                if (response.status === 200) {
-                    // console.log(response)
-                    const accessToken = response.data.data.accessToken;
-                    const refreshToken = response.data.data.refreshToken;
-                    Cookies.set('accessToken', accessToken, { path: '/', secure: true });
-                    Cookies.set('refreshToken', refreshToken, { path: '/', secure: true });
-
-
-
-                    auth.setAuthState((prevState: any) => ({
-                        ...prevState,
-                        isAuthenticated: true,
-                        accessToken,
-                        refreshToken,
-                    }));
-                    navigate("/");
+                const res = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/google-login`, { token: response.access_token })
+                if (res.status === 200) {
+                    postSuccessSocialLogin(res);
                 }
 
             } catch (error) {
@@ -78,19 +69,7 @@ const Login: React.FC = () => {
             try {
                 const res = await axios.post(`${SERVER_BASE_URL}/api/v1/auth/facebook-login`, { token: response.accessToken });
                 if (res.status === 200) {
-                    const accessToken = res.data.data.accessToken;
-                    const refreshToken = res.data.data.refreshToken;
-                    Cookies.set('accessToken', accessToken, { path: '/', secure: true });
-                    Cookies.set('refreshToken', refreshToken, { path: '/', secure: true });
-
-
-                    auth.setAuthState((prevState: any) => ({
-                        ...prevState,
-                        isAuthenticated: true,
-                        accessToken,
-                        refreshToken,
-                    }));
-                    navigate("/");
+                   postSuccessSocialLogin(res);
                 }
             } catch (error) {
                 console.error('Error logging in with Facebook:', error);
@@ -98,16 +77,31 @@ const Login: React.FC = () => {
         }
     }
 
+    const postSuccessSocialLogin = (res: any) => {
+        const accessToken = res.data.data.accessToken;
+        const refreshToken = res.data.data.refreshToken;
+        Cookies.set('accessToken', accessToken, { path: '/', secure: true });
+        Cookies.set('refreshToken', refreshToken, { path: '/', secure: true });
+        
+        auth.setAuthState((prevState: any) => ({
+            ...prevState,
+            isAuthenticated: true,
+            accessToken,
+            refreshToken,
+        }));
+        navigate("/");
+    }
+
     return (<>
-        <section style={{height: '100vh', width: '150vh', padding: "100px"}} className="app-background container">
+        <section style={{ height: '100vh', width: '150vh', padding: "100px" }} className="app-background container">
             <div className="row justify-content-center">
                 <div className="col-md-6">
                     <div className="card m-auto" >
-                        <div style={{padding: "40px"}} className="card-body ">
-                        <h1 style={{ fontFamily: 'Billabong' }} className="card-title text-center mb-2">
-                            <Link to="/login" className="text-decoration-none text-black">Simple Blog</Link>                
-                        </h1>
-                        <h5 style={{ fontFamily: 'Billabong' }} className="card-title text-center mb-4">Login</h5>
+                        <div style={{ padding: "40px" }} className="card-body ">
+                            <h1 style={{ fontFamily: 'Billabong' }} className="card-title text-center mb-2">
+                                <Link to="/login" className="text-decoration-none text-black">{APP_NAME}</Link>
+                            </h1>
+                            <h5 style={{ fontFamily: 'Billabong' }} className="card-title text-center mb-4">Login</h5>
                             <Formik
                                 initialValues={initialValues}
                                 validationSchema={userLoginValidation}
@@ -126,7 +120,7 @@ const Login: React.FC = () => {
                                             <Field type="password" placeholder="Password" name="password" id="password" className="form-control" />
                                             <ErrorMessage name="password" component="div" className="text-danger" />
                                         </div>
-                                        
+
                                         <div className="mb-3 text-center">
                                             <button type="submit" disabled={isSubmitting} className="w-100 btn btn-primary">
                                                 {isSubmitting ? 'Signing...' : 'Login'}
@@ -146,7 +140,7 @@ const Login: React.FC = () => {
                                     fields='email'
                                     onFail={(error) => console.error('Facebook login error:', error)}
                                     render={({ onClick }) => (
-                                        <button onClick={onClick} style={{ cursor: 'pointer', marginTop: '10px'}} className="mb-1 w-100 btn btn-primary">
+                                        <button onClick={onClick} style={{ cursor: 'pointer', marginTop: '10px' }} className="mb-1 w-100 btn btn-primary">
                                             <img src="https://www.logo.wine/a/logo/Facebook/Facebook-f_Logo-White-Dark-Background-Logo.wine.svg" style={{ width: '24px', height: '24px' }} alt="Facebook Icon" className="me-2" />
                                             Login with Facebook
                                         </button>

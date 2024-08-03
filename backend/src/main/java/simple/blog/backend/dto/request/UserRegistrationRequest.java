@@ -22,7 +22,7 @@ public class UserRegistrationRequest {
 
     @NotBlank(message =  "First name must be not blank!")
     @NotNull
-    @Pattern(regexp = User.VIETNAMESE_NAME_REGEX, message = "First letter  of first name must be capitalized!")
+    @Pattern(regexp = User.VIETNAMESE_NAME_REGEX, message = "First letter of first name must be capitalized!")
     private String firstName;
     
     @NotBlank(message =  "Last name must be not blank!")
@@ -37,7 +37,6 @@ public class UserRegistrationRequest {
 
     private String profilePicture;
 
-//    @ValidProvider
     @EnumValue(name = "provider", enumClass = Provider.class)
     @NotNull
     private Provider provider;

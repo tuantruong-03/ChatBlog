@@ -5,9 +5,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.DeleteMapping;
-
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.mail.MessagingException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-
 import simple.blog.backend.dto.request.OAuthTokenRequest;
 import simple.blog.backend.dto.request.RefreshTokenRequest;
 import simple.blog.backend.dto.request.UserLoginRequest;
@@ -28,22 +25,22 @@ import simple.blog.backend.dto.response.UserLoginResponse;
 import simple.blog.backend.dto.response.UserResponse;
 import simple.blog.backend.mapper.UserMapper;
 import simple.blog.backend.model.User;
+import simple.blog.backend.service.AuthenticationService;
 import simple.blog.backend.service.EmailVerificationTokenService;
 import simple.blog.backend.service.RefreshTokenService;
-import simple.blog.backend.service.UserService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthControllerV1 {
 	
-	private final UserService userService;
+	private final AuthenticationService authService;
 	private final RefreshTokenService refreshTokenService;
 	private final EmailVerificationTokenService emailService;
 	
 	@PostMapping("/register") 
 	public ResponseEntity<ApiResponse> register(@Valid @RequestBody UserRegistrationRequest requestBody) throws UnsupportedEncodingException, MessagingException {
-		UserResponse registeredUser = UserMapper.toUserResponse(userService.register(requestBody));
+		UserResponse registeredUser = UserMapper.toUserResponse(authService.register(requestBody));
 		System.out.println(registeredUser.toString());
     	ApiResponse respponse = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
@@ -55,10 +52,9 @@ public class AuthControllerV1 {
         return new ResponseEntity<>(respponse, HttpStatus.CREATED); 
 	}
 
-	
 	@PostMapping("/login")
 	public ResponseEntity<ApiResponse> login(@Valid @RequestBody UserLoginRequest requestBody) {
-		UserLoginResponse userLoginResponse = userService.login(requestBody);
+		UserLoginResponse userLoginResponse = authService.login(requestBody);
 
 		ApiResponse respponse = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
@@ -71,7 +67,7 @@ public class AuthControllerV1 {
 
 	@DeleteMapping("/logout")
 	public ResponseEntity<ApiResponse> logout(@Valid @RequestBody UserLogoutRequest requestBody) {
-		userService.logout(requestBody);
+		authService.logout(requestBody);
 
 		ApiResponse respponse = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
@@ -85,7 +81,7 @@ public class AuthControllerV1 {
 	@PostMapping("/google-login")
 	public ResponseEntity<ApiResponse> GoogleLogin(@Valid @RequestBody OAuthTokenRequest requestBody) {
 		// 
-		UserLoginResponse userLoginResponse = userService.GoogleLogin(requestBody.getToken());
+		UserLoginResponse userLoginResponse = authService.GoogleLogin(requestBody.getToken());
 		ApiResponse respponse = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
     			.message("User is authenticated")
@@ -97,7 +93,7 @@ public class AuthControllerV1 {
 	}
 	@PostMapping("/facebook-login")
 	public ResponseEntity<ApiResponse> FacebookLogin(@Valid @RequestBody OAuthTokenRequest requestBody) {
-		UserLoginResponse userLoginResponse = userService.FacebookLogin(requestBody.getToken());
+		UserLoginResponse userLoginResponse = authService.FacebookLogin(requestBody.getToken());
 		ApiResponse respponse = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
     			.message("User is authenticated")

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Modal, Button, Form, Spinner } from 'react-bootstrap';
-import { SERVER_BASE_URL } from '../../constants/backend-server';
-import useApi from '../../hooks/api';
+import { SERVER_BASE_URL } from '../../../constants/backend-server';
+import useApi from '../../../hooks/api';
+import { auto } from '@popperjs/core';
+import { useAuth } from '../../../hooks/auth-provider';
 
 interface ChangeProfilePictureModalProps {
     show: any, handleClose: any, userId: any, setProfilePicture: any,
@@ -14,6 +16,7 @@ const ChangeProfilePictureModal = (props: ChangeProfilePictureModalProps) => {
     const [loading, setLoading] = useState<boolean>(false); // New loading state
 
     const api = useApi();
+    const auth = useAuth();
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0] || null;
@@ -44,7 +47,6 @@ const ChangeProfilePictureModal = (props: ChangeProfilePictureModalProps) => {
                         'Content-Type': 'multipart/form-data',
                     },
                 });
-
                 const newImageUrl = response.data.data;
                 setProfilePicture(newImageUrl);
                 handleCloseModal();

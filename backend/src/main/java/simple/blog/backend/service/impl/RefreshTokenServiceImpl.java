@@ -37,6 +37,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         // compare refresh token in database and refresh token in user request
         // valid that refresh token
         try {
+            RefreshToken rfTokenInDB = refreshTokenRepository.findByToken(request.getToken());
+            if (rfTokenInDB == null) {
+                throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
+            }
             if (jwtUtil.isTokenValid(request.getToken())) {
                 String username = jwtUtil.extractUsername(request.getToken());
                 User user = userRepository.findByUsername(username);
@@ -54,7 +58,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             System.out.println("refresh token is not valid");
             refreshTokenRepository.deleteRefreshTokenByToken(request.getToken());
             throw new AppException("Invalid refresh token", HttpStatus.UNAUTHORIZED);
-        }   
+        }
     }
 
     @Override
