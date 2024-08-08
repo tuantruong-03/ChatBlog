@@ -7,6 +7,6 @@ import lombok.Getter;
 @Getter
 public class UserLogoutRequest {
     @NotEmpty(message = "Refresh token must not be empty")
-    @NotNull(message = "Refresh token must not be empty")
+    @NotNull(message = "Refresh token must not be null")
     private String refreshToken;
 }

@@ -9,7 +9,6 @@ import simple.blog.backend.dto.response.UserResponse;
 import simple.blog.backend.model.Role;
 import simple.blog.backend.model.User;
 
-@Component
 public class UserMapper {
 
    // User toUser(UserRegistrationDTO request);

@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, ReactNode, useContext } from 'react';
+import { createContext, useState, useEffect, ReactNode, useContext, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import axios from 'axios';
@@ -85,6 +85,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     const logout = async () => {
         try {
             const { refreshToken } = authState;
+            console.log(refreshToken)
             const response = await axios.delete(`${SERVER_BASE_URL}/api/v1/auth/logout`, {
                 withCredentials: true,
                 headers: {
@@ -117,17 +118,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     };
 
-    useEffect(() => {
-        setAuthState(prev => ({
-            ...prev,
-            login,
-            logout,
-            setAuthState,
-        }));
-    }, []);
+    const authContextValue = useMemo(() => ({
+        ...authState,
+        setAuthState,
+        login,
+        logout
+    }), [authState, setAuthState]);
 
     return (
-        <AuthContext.Provider value={authState}>
+        <AuthContext.Provider value={authContextValue}>
             {children}
         </AuthContext.Provider>
     );

@@ -1,6 +1,7 @@
 package simple.blog.backend.controller;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
@@ -17,12 +18,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import simple.blog.backend.dto.request.UserUpdateRequest;
 import simple.blog.backend.dto.response.ApiResponse;
 import simple.blog.backend.dto.response.UserResponse;
+import simple.blog.backend.mapper.ChatRoomMapper;
 import simple.blog.backend.mapper.UserMapper;
+import simple.blog.backend.model.ChatRoom;
 import simple.blog.backend.model.User;
+import simple.blog.backend.service.ChatRoomService;
 import simple.blog.backend.service.UserService;
 
 
@@ -32,6 +37,7 @@ import simple.blog.backend.service.UserService;
 public class UserControllerV1 {
 	
     private final UserService userService;
+	private final ChatRoomService chatRoomService;
     
     @GetMapping()
     public ResponseEntity<ApiResponse> getUserList() {
@@ -58,24 +64,11 @@ public class UserControllerV1 {
     	
         return new ResponseEntity<>(resp, HttpStatus.OK);
 	}
-	
-	@GetMapping("/me/roles")
-	public ResponseEntity<ApiResponse> getUserRoles() {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		User user = (User)authentication.getPrincipal();
-		ApiResponse resp = ApiResponse.builder()
-    			.timestamp(LocalDateTime.now())
-    			.message("Get user roles successfully")
-    			.statusCode(HttpStatus.OK.value())
-    			.data(user.getRoles())
-    			.build();
-    	
-        return new ResponseEntity<>(resp, HttpStatus.OK);
-	}
 
-    @GetMapping("/{username}")
-    public ResponseEntity<ApiResponse> getUserByUsername(@PathVariable String username) {
-		UserResponse userResponse = UserMapper.toUserResponse((User)userService.loadUserByUsername(username));
+
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse> getUserByUserId(@PathVariable("id") @Min(0) Integer id) {
+		UserResponse userResponse = UserMapper.toUserResponse((User)userService.findUserByUserId(id));
     	ApiResponse resp = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
     			.message("Get user successfully")
@@ -113,13 +106,27 @@ public class UserControllerV1 {
 
         return new ResponseEntity<>(resp, HttpStatus.OK); 
 	} 
+
+	
+    @GetMapping("/{id}/chatrooms")
+    public ResponseEntity<ApiResponse> getChatRoomsOfUserId(@PathVariable("id") @Min(0) Integer id) {
+		List<ChatRoom> chatRooms = chatRoomService.findChatRoomsOfUser(id);
+    	ApiResponse resp = ApiResponse.builder()
+    			.timestamp(LocalDateTime.now())
+    			.message("Get user successfully")
+    			.statusCode(HttpStatus.OK.value())
+    			.data(chatRooms.stream().map(chatRoom -> ChatRoomMapper.toResponseFromModel(chatRoom)))
+    			.build();
+
+        return new ResponseEntity<>(resp, HttpStatus.OK); 
+    }
 	
 	@GetMapping("/search")
     public ResponseEntity<ApiResponse> searchUsers(@RequestParam String query) {
 		ApiResponse resp = ApiResponse.builder()
     			.timestamp(LocalDateTime.now())
     			.statusCode(HttpStatus.OK.value())
-    			.data(userService.searchUsers(query).stream().map(user -> UserMapper.toUserResponse(user)).collect(Collectors.toList()))
+    			.data(userService.searchUsers(query).stream().map(user -> UserMapper.toUserResponse(user)))
     			.build();
         return new ResponseEntity<>(resp, HttpStatus.OK);
     }

@@ -9,5 +9,6 @@ import simple.blog.backend.model.ChatMessage;
 public interface ChatMessageService {
     List<ChatMessage> findChatMessagesByChatRoom(String chatRoomId);
     List<ChatMessage> findChatMessagesByChatRoomIdAndSenderId(String chatRoomId, Integer senderId, Sort sort);
+    ChatMessage saveChatMessage(ChatMessage chatMessage);
 
 }

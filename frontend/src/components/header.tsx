@@ -5,7 +5,6 @@ import useApi from '../hooks/api';
 import { SERVER_BASE_URL } from '../constants/backend-server';
 import { link } from 'fs';
 import { useAuth } from '../hooks/auth-provider';
-import { APP_NAME } from '../constants/app';
 
 const Header = () => {
   const api = useApi();
@@ -54,7 +53,7 @@ const Header = () => {
     <Navbar bg="light" expand="lg" fixed='top'>
       <Container>
         <Navbar.Brand as={Link} to="/" className='navbar-brand-name'>
-          {APP_NAME}
+          Simple Blog
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="navbarSupportedContent" />
         <Navbar.Collapse id="navbarSupportedContent">

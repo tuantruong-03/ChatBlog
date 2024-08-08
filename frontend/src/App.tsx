@@ -19,7 +19,6 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <AuthProvider>
-
         <div className="App" style={{backgroundColor:'#80808021'}}>
           <Routes>
             <Route path='/login' element={<Login />} />
@@ -32,7 +31,6 @@ function App() {
             </Route>
           </Routes>
         </div>
-
       </AuthProvider>
     </GoogleOAuthProvider>
   );

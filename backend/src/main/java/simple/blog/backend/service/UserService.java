@@ -7,12 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import jakarta.mail.MessagingException;
 import simple.blog.backend.dto.request.UserUpdateRequest;
-import simple.blog.backend.dto.request.UserLoginRequest;
-import simple.blog.backend.dto.request.UserLogoutRequest;
-import simple.blog.backend.dto.request.UserRegistrationRequest;
-import simple.blog.backend.dto.response.UserLoginResponse;
 import simple.blog.backend.model.User;
 
 public interface UserService extends UserDetailsService {

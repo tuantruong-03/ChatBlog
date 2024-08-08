@@ -1,21 +1,20 @@
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { useAuth } from "../../hooks/auth-provider";
 import useApi from "../../hooks/api";
-import { useEffect, useState } from "react";
 
 const UserHomepage = () => {
     const api = useApi();
     const auth = useAuth();
-    const navigate = useNavigate();
-    const [username, setUsername] = useState<string>("");
-
+    const [user, setUser] = useState<any>();
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const response = await api.get(`/api/v1/users/me`)
+                const response = await api.get(`/api/v1/users/me`)  
                 if (response.status == 200) {
-                    const data = response.data.data;
-                    setUsername(data.username)
+                    const user = response.data.data;
+                    setUser(user);
+                    // console.log(data)
+   
                 }
             } catch (err) {
                 console.log(err)
@@ -25,9 +24,10 @@ const UserHomepage = () => {
         fetchData();
     }, [])
 
+
     return (
         <>
-        Welcome to homepage {username}
+        Welcome to homepage {user?.username}
         <button onClick={() => auth.logout()}>Log out</button>
         </>
 
