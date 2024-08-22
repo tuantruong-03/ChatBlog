@@ -16,7 +16,7 @@ interface ChatContextProps {
     chatRoomSelected: ChatRoom | null;
     setChatRoomSelected: (chatRoom: ChatRoom) => void;
     findOrCreatePrivateChatRoom: (userId: string) => Promise<void>;
-    onChangeChatRooms: () => Promise<void>;
+    onSortChatRooms: (chatRoom: ChatRoom) => void;
 }
 
 interface ChatProviderProps {
@@ -31,7 +31,20 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     const { user } = useAuth();
     const api = useApi();
 
-    const onChangeChatRooms = async () => {
+    // When receive a message from a chatroom
+    const onSortChatRooms = async (chatRoom: ChatRoom) => {
+        setChatRooms((prevChatRooms) => {
+            // Find the chat room with the given chatRoomId
+            let chatRoomToMove = prevChatRooms.find(room => room.chatRoomId === chatRoom.chatRoomId);
+            if (!chatRoomToMove) chatRoomToMove = chatRoom; // If the room isn't found, return the previous state
+    
+            // Filter out the room to be moved and place it at the beginning of the array
+            const updatedChatRooms = [chatRoomToMove, ...prevChatRooms.filter(room => room.chatRoomId !== chatRoom.chatRoomId)];
+            return updatedChatRooms;
+        });
+    }
+
+    const fetchAllChatRooms = async () => {
         if (!user) return;
         try {
             const response = await api.get(`/api/v1/users/${user.userId}/chatrooms`);
@@ -44,13 +57,14 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     };
     useEffect(() => {
       
-        onChangeChatRooms();
+        fetchAllChatRooms();
     }, [user]);
 
     const findOrCreatePrivateChatRoom = async (userId: string) => {
         try {
             const response = await api.post(`${SERVER_BASE_URL}/api/v1/chat-room/find-or-create-private`, { otherUserId: userId });
             const chatroom = response.data.data;
+            console.log(chatroom)
             setChatRoomSelected(chatroom);
         } catch (err) {
             console.log(err);
@@ -58,7 +72,7 @@ export const ChatProvider: React.FC<ChatProviderProps> = ({ children }) => {
     };
 
     return (
-        <ChatContext.Provider value={{ chatRooms, chatRoomSelected, setChatRoomSelected, findOrCreatePrivateChatRoom, onChangeChatRooms }}>
+        <ChatContext.Provider value={{ chatRooms, chatRoomSelected, setChatRoomSelected, findOrCreatePrivateChatRoom, onSortChatRooms }}>
             {children}
         </ChatContext.Provider>
     );

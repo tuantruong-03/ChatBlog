@@ -1,0 +1,18 @@
+services:
+  springboot:
+    image: tuantruong03/spring-boot-chatblog
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+
+  react:
+    image: tuantruong03/reactjs-chatblog
+    ports:
+      - "3000:80"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge

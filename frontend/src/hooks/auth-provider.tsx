@@ -118,12 +118,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         }
     };
 
-    const authContextValue = useMemo(() => ({
+    // const authContextValue = useMemo(() => ({
+    //     ...authState,
+    //     setAuthState,
+    //     login,
+    //     logout
+    // }), [authState, setAuthState]);
+    
+    const authContextValue = {
         ...authState,
         setAuthState,
         login,
         logout
-    }), [authState, setAuthState]);
+    };
 
     return (
         <AuthContext.Provider value={authContextValue}>

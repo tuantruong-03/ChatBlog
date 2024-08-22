@@ -1,54 +1,99 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Button, Card, CardBody, Col, Container, Form, Row, Spinner } from 'react-bootstrap';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPaperclip, faSmile, faPaperPlane } from '@fortawesome/free-solid-svg-icons';
+import { faPaperclip, faSmile, faPaperPlane, faL } from '@fortawesome/free-solid-svg-icons';
 import { useAuth } from '../../../hooks/auth-provider';
 import useApi from '../../../hooks/api';
 import { ref } from 'yup';
+import { useChat } from '../../../hooks/chat-provider';
 
 interface MessagesProps {
     chatRoomSelected: any
 }
 
 const Messages = (props: MessagesProps) => {
+    const { onSortChatRooms } = useChat();
     const { chatRoomSelected } = props;
     const { user, stompClient } = useAuth();
     const [messages, setMessages] = useState<[]>([]) // For display messages list
+    const [page, setPage] = useState(0); // Current page for pagination
+    const [loading, setLoading] = useState(false); // Loading state for lazy messages loading 
     const api = useApi();
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const [isUserScrolling, setIsUserScrolling] = useState(false);
+    const [otherUsers, setOtherUsers] = useState<Map<number, any>>(new Map());
     const [chatMessageDTO, setChatMessageDTO] = useState({
         chatRoomId: chatRoomSelected.chatRoomId,
         senderId: user.userId,
         content: "",
     }) // For exchange message between client and server
 
-    const fetchMessages = async () => {
+    const fetchMessagesInChatRoomSelected = async () => {
+        setLoading(true)
         try {
-            const response = await api.get("/api/v1/chat-message/" + chatRoomSelected.chatRoomId)
+            const response = await api.get(`/api/v1/chat-message/${chatRoomSelected.chatRoomId}?page=${page}&pageSize=10`)
             const data = response.data.data;
-            const messages = data.reverse()
-            setMessages(messages)
+            const messages: [] = data.reverse();
+            if (page == 0) {
+                setMessages(messages)
+            } else {
+                setMessages((prevMessages) => [...messages, ...prevMessages])
+            }
             // console.log(messages)
         } catch (error) {
             console.error("Failed to fetch messages", error);
+        } finally {
+            setLoading(false)
         }
     }
 
     const onMessageReceived = async (payload: any) => {
-        fetchMessages()
+        console.log(payload.body)
+        const payloadData = JSON.parse(payload.body)
+        if (payloadData.chatRoomId != chatRoomSelected.chatRoomId) {
+            fetchMessagesInChatRoomSelected()
+        }
+        onSortChatRooms(payloadData);
     }
 
     useEffect(() => {
         stompClient?.subscribe(`/user/${user.userId}/private`, onMessageReceived)
-    }, [stompClient, user.userId])
+    }, [])
     // Change chatRoomId when click a user search
     useEffect(() => {
+        const userIds = chatRoomSelected.userIds;
+        // console.log(userIds)
+        const otherUserIds = userIds.filter((userId: number) => userId != user.userId);
+        const userMap: Map<number, object> = new Map();
+        const fetchOtherUser = async (otherUserIds: []) => {
+            for (const otherUserId of otherUserIds) {
+                try {
+                    const response = await api.get(`/api/v1/users/${otherUserId}`)
+                    const data = response.data.data;
+                    const { userId, ...userInfo } = data
+                    userMap.set(userId, userInfo)
+                } catch (error) {
+                    console.error("Failed to fetch messages", error);
+                }
+            }
+            setOtherUsers(userMap)
+        }
+        fetchOtherUser(otherUserIds)
+
         setChatMessageDTO({ ...chatMessageDTO, chatRoomId: chatRoomSelected.chatRoomId })
     }, [chatRoomSelected])
+    // useEffect(() => {
+    //     console.log(otherUsers)
+    // }, [otherUsers])
 
     useEffect(() => {
-        fetchMessages();
-    }, [chatMessageDTO])
+        fetchMessagesInChatRoomSelected();
+    }, [chatMessageDTO, page])
+
+
+
+
 
     const handleValue = (event: any) => {
         const { value, name } = event.target;
@@ -63,6 +108,7 @@ const Messages = (props: MessagesProps) => {
         }
 
         stompClient.send('/app/messages-queue', {}, JSON.stringify(chatMessageDTO))
+        onSortChatRooms(chatRoomSelected)
         setChatMessageDTO({
             ...chatMessageDTO,
             content: ""
@@ -87,10 +133,10 @@ const Messages = (props: MessagesProps) => {
     return (
         <>
             <Card className='mb-2'>
-                <CardBody style={{backgroundColor: '#f4f4f4'}} className='d-flex align-items-center'>
-                <div>
+                <CardBody style={{ backgroundColor: '#f4f4f4' }} className='d-flex align-items-center'>
+                    <div>
                         <img
-                            src={chatRoomSelected.roomPicture} 
+                            src={chatRoomSelected.roomPicture}
                             alt="avatar" className="d-flex align-self-center me-2 rounded-4" height="50px" width="50px"
                         />
                         {/* <span className={`badge ${user.status === 'ONLINE' ? 'bg-success' : 'bg-secondary'} badge-dot`}></span> */}
@@ -102,18 +148,19 @@ const Messages = (props: MessagesProps) => {
                 </CardBody>
             </Card>
             <div
+                ref={messagesContainerRef}
                 className="pt-3 pe-3"
                 style={{ height: '400px', overflowY: 'auto' }}>
                 {/* List of messages */}
-                {messages.length > 0 ? (
+                {messages.length > 0 && (
                     messages.map((message: any, index) => {
                         if (message.senderId === user.userId) {
                             // My message
                             return (
-                                <div ref={index == messages.length -1 ? messagesEndRef : null} key={message.chatMessageId} className="d-flex justify-content-end">
+                                <div ref={index == messages.length - 1 ? messagesEndRef : null} key={message.chatMessageId} className="d-flex justify-content-end">
                                     <div className="d-flex flex-column align-items-end">
                                         <p
-                                            style={{ maxWidth: '50%', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
+                                            style={{ maxWidth: '60%', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
                                             className="small p-2 me-3 mb-1 text-white rounded-3 bg-primary"
                                         >
                                             {message.content}
@@ -131,15 +178,15 @@ const Messages = (props: MessagesProps) => {
                             );
                         } else {
                             return (
-                                <div ref={index == messages.length -1 ? messagesEndRef : null} key={message.chatMessageId} className="d-flex justify-content-start">
+                                <div ref={index == messages.length - 1 ? messagesEndRef : null} key={message.chatMessageId} className="d-flex justify-content-start">
                                     <img
-                                        src="https://mdbcdn.b-cdn.net/img/Photos/new-templates/bootstrap-chat/ava6-bg.webp"
+                                        src={otherUsers.get(message.senderId)?.profilePicture}
                                         alt="avatar 1"
                                         style={{ width: '45px', height: '45px' }}
                                     />
                                     <div className="d-flex flex-column align-items-start">
                                         <p
-                                            style={{ backgroundColor: '#f5f6f7', maxWidth: '50%', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
+                                            style={{ backgroundColor: '#f5f6f7', maxWidth: '60%', wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}
                                             className="small p-2 ms-3 mb-1 rounded-3"
                                         >
                                             {message.content}
@@ -152,8 +199,11 @@ const Messages = (props: MessagesProps) => {
                             );
                         }
                     })
-                ) : (
-                    <>No messages</>
+                )}
+                {loading && (
+                    <div className="d-flex justify-content-center">
+                        <Spinner animation="border" />
+                    </div>
                 )}
             </div>
             {/* end of List of message */}

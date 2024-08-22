@@ -49,7 +49,6 @@ const UserLayout = () => {
                     ...prevState,
                     sockJsClient,
                     stompClient,
-                    isAuthenticated: true,
                 }));
             },
             (error: any) => {

@@ -5,6 +5,7 @@ import UserProfile from "./user-profile/user-profile"
 
 import UserChatLayout from "./user-chat/layout"
 import { ChatProvider } from "../../hooks/chat-provider"
+import TestContext from "./test-context"
 
 const UserRoutes = () => {
 
@@ -16,6 +17,7 @@ const UserRoutes = () => {
                     <Route index element={<UserHomepage />} />
                     <Route path="profile" element={<UserProfile />} />
                     <Route path="message" element={<UserChatLayout />} />
+                    <Route path="test-context" element={<TestContext/>}/>
                 </Route>
 
             </Routes>
